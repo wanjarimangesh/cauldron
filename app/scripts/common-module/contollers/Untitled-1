@@ -1,0 +1,48 @@
+ 
+public NbnOrder getOrderDetails( GetOrderDetailsFromMACAddressRequest request, DomainManager domainManager )
+                  throws NbnException 
+       {
+
+                  DomainObject domainObject = null;
+                  QueryCriteriaBuilder queryCriteria = null;
+               //   Map<String,Object> orderDetails = new HashMap<String,Object>();
+                         
+			if(MAC_ADDRESS == null)
+			{
+                     throw new NbnException("Invalid Mac Address Provided");
+            }
+            else
+            {
+             HFC_NTD_v1 hfcNtd = null;
+             NbnOrder order = null;
+                if (!StringUtils.isEmpty( request.getMacAddress()))
+                {
+                 hfcNtd = CRUDUtils.queryOne( domainManager, HFC_NTD_v1.class, HFC_NTD_v1.MAC_ADDRESS, request.getMacAddress() );
+                } 
+                   if (hfcNtd != null)
+                   {
+                     CdoaProduct associatedProduct = hfcNtd.getCdoaProduct();
+                       if (associatedProduct instanceof NHAS_v1)
+                       {
+						NHAS_v1 nhas = (NHAS_v1) associatedProduct;
+						for (BusinessInteractionItem businessInteractionItem : nhas.getBusinessInteractionItems()) 
+						{
+                          if (BusinessInteractionItem instanceof CustomerOrderItem) 
+                          {
+                            CustomerOrderItem customerOrderItem = (CustomerOrderItem) BusinessInteractionItem;
+                           	if (customerOrderItem.getCustomerOrder() instanceof NbnOrder)
+                           	{
+                              NbnOrder nbnOrder = (NbnOrder) customerOrderItem.getCustomerOrder();
+                               if (nbnOrder.getOrderType().equalsIgnoreCase("Connect")) 
+                               {
+                                  order = nbnOrder;
+                               }
+                            }
+                          }
+                        }
+						
+                       }
+                   }
+            }
+			return order;	
+       }                     
